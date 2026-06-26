@@ -21,7 +21,14 @@ import {
   useState,
 } from "react";
 import { photosDB, catalogsDB } from "@/lib/db";
-import { decode, makeThumb, analyzeQuality, decodeVideoFrame, dataUrlToBlob } from "@/lib/image";
+import {
+  decode,
+  makeThumb,
+  analyzeQuality,
+  decodeVideoFrame,
+  dataUrlToBlob,
+  extractCr2Jpeg,
+} from "@/lib/image";
 import { dot } from "@/lib/cosine";
 import { AIClient } from "@/lib/ai/aiClient";
 
@@ -29,7 +36,7 @@ const DamContext = createContext(null);
 export const useDam = () => useContext(DamContext);
 
 const stripExt = (name) => name.replace(/\.[^.]+$/, "");
-const stripBlob = ({ blob, ...rest }) => rest; // keep state lightweight
+const stripBlob = ({ blob, previewBlob, ...rest }) => rest; // keep state lightweight
 
 export default function DamProvider({ children }) {
   const [photos, setPhotos] = useState([]);
@@ -132,9 +139,12 @@ export default function DamProvider({ children }) {
       if (!rec) return;
       patchPhoto(id, { aiStatus: "processing" });
       try {
-        // The image model can't read a video file, so for videos we analyze
-        // the representative frame we captured (stored as the thumbnail).
-        const source = rec.kind === "video" ? await dataUrlToBlob(rec.thumb) : rec.blob;
+        // The image model can't read a video or RAW file, so for those we
+        // analyze the representative frame/preview we captured as the thumbnail.
+        const source =
+          rec.kind === "video" || rec.kind === "raw"
+            ? await dataUrlToBlob(rec.thumb)
+            : rec.blob;
         const { caption, embedding, tags } = await aiRef.current.process(source);
         const patch = { caption, embedding, tags, aiStatus: "done", aiError: null };
         await photosDB.put({ ...rec, ...patch });
@@ -166,20 +176,24 @@ export default function DamProvider({ children }) {
   // ---------- add photos ----------
   const addFiles = useCallback(
     async (fileList) => {
+      const isRawName = (name) => /\.cr2$/i.test(name);
       const files = [...fileList].filter(
-        (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
+        (f) =>
+          f.type.startsWith("image/") || f.type.startsWith("video/") || isRawName(f.name)
       );
       if (!files.length) {
-        toast("Those files weren't images or videos.", "err");
+        toast("Those files weren't supported images, RAW or videos.", "err");
         return;
       }
       for (const file of files) {
         const id = crypto.randomUUID();
         const isVideo = file.type.startsWith("video/");
+        const isRaw = !isVideo && isRawName(file.name);
         try {
-          // Both paths produce a "bitmap" (an ImageBitmap or a canvas) that
-          // makeThumb/analyzeQuality can draw from — for video it's a frame.
-          let thumb, width, height, quality, duration = null;
+          // Every path yields a "bitmap" (ImageBitmap or canvas) that
+          // makeThumb/analyzeQuality can draw from: a video frame, the JPEG
+          // preview embedded in a RAW file, or the image itself.
+          let thumb, width, height, quality, duration = null, previewBlob = null;
           if (isVideo) {
             const frame = await decodeVideoFrame(file);
             width = frame.width;
@@ -188,6 +202,12 @@ export default function DamProvider({ children }) {
             ({ thumb } = makeThumb(frame.bitmap));
             quality = analyzeQuality(frame.bitmap);
             frame.bitmap.close?.();
+          } else if (isRaw) {
+            previewBlob = await extractCr2Jpeg(file);
+            const bitmap = await decode(previewBlob);
+            ({ thumb, width, height } = makeThumb(bitmap));
+            quality = analyzeQuality(bitmap);
+            bitmap.close?.();
           } else {
             const bitmap = await decode(file);
             ({ thumb, width, height } = makeThumb(bitmap));
@@ -196,14 +216,15 @@ export default function DamProvider({ children }) {
           }
           const photo = {
             id,
-            kind: isVideo ? "video" : "image",
+            kind: isVideo ? "video" : isRaw ? "raw" : "image",
             name: stripExt(file.name),
             fileName: file.name,
-            type: file.type,
+            type: file.type || (isRaw ? "CR2 (RAW)" : ""),
             size: file.size,
             width,
             height,
             duration,
+            previewBlob,
             blob: file,
             thumb,
             caption: "",
@@ -258,7 +279,8 @@ export default function DamProvider({ children }) {
 
   const getBlob = useCallback(async (id) => {
     const rec = await photosDB.get(id);
-    return rec?.blob || null;
+    // RAW files display via their extracted JPEG preview; others use the blob.
+    return rec?.previewBlob || rec?.blob || null;
   }, []);
 
   // ---------- catalogs ----------

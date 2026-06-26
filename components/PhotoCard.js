@@ -51,6 +51,12 @@ export default function PhotoCard({ photo, relevance, onOpen, onDelete }) {
           </>
         )}
 
+        {photo.kind === "raw" && !busy && (
+          <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-bg/80 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-accent-hi ring-1 ring-accent/40">
+            RAW
+          </span>
+        )}
+
         {/* top badges */}
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-2">
           {!busy && <QualityBadge quality={photo.quality} />}

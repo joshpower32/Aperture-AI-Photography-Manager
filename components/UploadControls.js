@@ -5,7 +5,7 @@ import { useDam } from "./DamProvider";
 import { Icon } from "./icons";
 
 const ACCEPT =
-  "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm,video/quicktime";
+  "image/jpeg,image/png,image/webp,image/avif,image/gif,image/x-canon-cr2,.cr2,video/mp4,video/webm,video/quicktime";
 
 // Compact button for the toolbar.
 export function UploadButton() {
@@ -63,9 +63,9 @@ export function UploadDropzone() {
       </span>
       <h3 className="mt-5 font-display text-2xl text-cream">Drop photos or videos to begin</h3>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
-        Drag images (JPEG, PNG, WebP, AVIF) or videos (MP4, WebM, MOV) here, or click to browse.
-        Each one is captioned, tagged and scored by AI right here in your browser — nothing is
-        uploaded.
+        Drag images (JPEG, PNG, WebP, AVIF), RAW (CR2) or videos (MP4, WebM, MOV) here, or click
+        to browse. Each one is captioned, tagged and scored by AI right here in your browser —
+        nothing is uploaded.
       </p>
       <span className="tracked mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-bg">
         <Icon.Upload width={16} height={16} strokeWidth={2.2} />
