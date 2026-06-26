@@ -24,7 +24,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
-      <body className="min-h-screen bg-bg text-cream antialiased">{children}</body>
+      {/* suppressHydrationWarning: browser extensions (e.g. Grammarly) add
+          attributes to <body> before React hydrates, which would otherwise
+          trigger a harmless hydration mismatch warning. */}
+      <body className="min-h-screen bg-bg text-cream antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

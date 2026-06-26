@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useDam } from "./DamProvider";
 import { Icon } from "./icons";
 import QualityBadge from "./QualityBadge";
+import { formatDuration } from "@/lib/image";
 
 export default function PhotoCard({ photo, relevance, onOpen, onDelete }) {
   const { reprocessPhoto } = useDam();
@@ -32,6 +33,22 @@ export default function PhotoCard({ photo, relevance, onOpen, onDelete }) {
             <span className="h-7 w-7 animate-spin rounded-full border-2 border-line-hi border-t-accent" />
             <span className="text-[11px] uppercase tracking-wider text-accent-hi">Analyzing</span>
           </div>
+        )}
+
+        {/* Video affordances: a play glyph and the clip duration */}
+        {photo.kind === "video" && !busy && (
+          <>
+            <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-bg/55 text-cream ring-1 ring-white/30 backdrop-blur-sm">
+                <Icon.Play width={20} height={20} />
+              </span>
+            </span>
+            {photo.duration ? (
+              <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-bg/80 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-cream">
+                {formatDuration(photo.duration)}
+              </span>
+            ) : null}
+          </>
         )}
 
         {/* top badges */}

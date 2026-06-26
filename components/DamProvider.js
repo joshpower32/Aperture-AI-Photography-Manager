@@ -21,7 +21,7 @@ import {
   useState,
 } from "react";
 import { photosDB, catalogsDB } from "@/lib/db";
-import { decode, makeThumb, analyzeQuality } from "@/lib/image";
+import { decode, makeThumb, analyzeQuality, decodeVideoFrame, dataUrlToBlob } from "@/lib/image";
 import { dot } from "@/lib/cosine";
 import { AIClient } from "@/lib/ai/aiClient";
 
@@ -132,7 +132,10 @@ export default function DamProvider({ children }) {
       if (!rec) return;
       patchPhoto(id, { aiStatus: "processing" });
       try {
-        const { caption, embedding, tags } = await aiRef.current.process(rec.blob);
+        // The image model can't read a video file, so for videos we analyze
+        // the representative frame we captured (stored as the thumbnail).
+        const source = rec.kind === "video" ? await dataUrlToBlob(rec.thumb) : rec.blob;
+        const { caption, embedding, tags } = await aiRef.current.process(source);
         const patch = { caption, embedding, tags, aiStatus: "done", aiError: null };
         await photosDB.put({ ...rec, ...patch });
         patchPhoto(id, patch);
@@ -163,26 +166,44 @@ export default function DamProvider({ children }) {
   // ---------- add photos ----------
   const addFiles = useCallback(
     async (fileList) => {
-      const files = [...fileList].filter((f) => f.type.startsWith("image/"));
+      const files = [...fileList].filter(
+        (f) => f.type.startsWith("image/") || f.type.startsWith("video/")
+      );
       if (!files.length) {
-        toast("Those files weren't images.", "err");
+        toast("Those files weren't images or videos.", "err");
         return;
       }
       for (const file of files) {
         const id = crypto.randomUUID();
+        const isVideo = file.type.startsWith("video/");
         try {
-          const bitmap = await decode(file);
-          const { thumb, width, height } = makeThumb(bitmap);
-          const quality = analyzeQuality(bitmap);
-          bitmap.close?.();
+          // Both paths produce a "bitmap" (an ImageBitmap or a canvas) that
+          // makeThumb/analyzeQuality can draw from — for video it's a frame.
+          let thumb, width, height, quality, duration = null;
+          if (isVideo) {
+            const frame = await decodeVideoFrame(file);
+            width = frame.width;
+            height = frame.height;
+            duration = frame.duration;
+            ({ thumb } = makeThumb(frame.bitmap));
+            quality = analyzeQuality(frame.bitmap);
+            frame.bitmap.close?.();
+          } else {
+            const bitmap = await decode(file);
+            ({ thumb, width, height } = makeThumb(bitmap));
+            quality = analyzeQuality(bitmap);
+            bitmap.close?.();
+          }
           const photo = {
             id,
+            kind: isVideo ? "video" : "image",
             name: stripExt(file.name),
             fileName: file.name,
             type: file.type,
             size: file.size,
             width,
             height,
+            duration,
             blob: file,
             thumb,
             caption: "",
@@ -201,7 +222,7 @@ export default function DamProvider({ children }) {
           toast(`Couldn't read “${file.name}”.`, "err");
         }
       }
-      toast(`${files.length} photo${files.length > 1 ? "s" : ""} added — analyzing…`);
+      toast(`${files.length} file${files.length > 1 ? "s" : ""} added — analyzing…`);
       pump();
     },
     [pump, toast]

@@ -119,12 +119,22 @@ export default function Lightbox({ photo, hasPrev, hasNext, onPrev, onNext, onCl
           <NavArrow side="left" onClick={onPrev} />
         )}
         {url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={url}
-            alt={caption || name}
-            className="max-h-[78vh] max-w-full rounded-lg object-contain shadow-2xl"
-          />
+          photo.kind === "video" ? (
+            <video
+              src={url}
+              controls
+              playsInline
+              autoPlay
+              className="max-h-[78vh] max-w-full rounded-lg shadow-2xl"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={url}
+              alt={caption || name}
+              className="max-h-[78vh] max-w-full rounded-lg object-contain shadow-2xl"
+            />
+          )
         ) : (
           <div className="flex h-64 w-64 items-center justify-center">
             <span className="h-9 w-9 animate-spin rounded-full border-2 border-line-hi border-t-accent" />

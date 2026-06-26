@@ -1,7 +1,11 @@
-// The repo name on GitHub. The site is served from
-// https://<user>.github.io/<repo>/ , so Next needs this as its base path or
-// every asset 404s. If you ever rename the repo, change this in one place.
+// The repo name on GitHub. The live site is served from
+// https://<user>.github.io/<repo>/ , so the production build needs this as its
+// base path or every asset 404s. If you rename the repo, change it here.
 const repo = "Aperture-AI-Photography-Manager";
+
+// Only apply the base path for production builds (GitHub Pages). In local
+// `npm run dev` we leave it empty so the app stays at http://localhost:3000.
+const isProd = process.env.NODE_ENV === "production";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -9,9 +13,9 @@ const nextConfig = {
   // hosted on GitHub Pages. Works because this app is 100% client-side.
   output: "export",
 
-  // GitHub Pages serves under a sub-path; tell Next about it.
-  basePath: `/${repo}`,
-  assetPrefix: `/${repo}`,
+  // GitHub Pages serves under a sub-path; tell the production build about it.
+  basePath: isProd ? `/${repo}` : "",
+  assetPrefix: isProd ? `/${repo}` : "",
 
   // next/image's optimizer needs a server; disable it for static export.
   // (We use plain <img> tags anyway.)

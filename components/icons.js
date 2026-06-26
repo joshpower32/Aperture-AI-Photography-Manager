@@ -93,4 +93,9 @@ export const Icon = {
       <path d="m21 15-5-5L5 21" />
     </svg>
   ),
+  Play: (p) => (
+    <svg {...base} {...p}>
+      <path d="M8 5.5v13l11-6.5z" fill="currentColor" strokeWidth={1.5} strokeLinejoin="round" />
+    </svg>
+  ),
 };

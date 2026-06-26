@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { useDam } from "./DamProvider";
 import { Icon } from "./icons";
 
-const ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/gif";
+const ACCEPT =
+  "image/jpeg,image/png,image/webp,image/avif,image/gif,video/mp4,video/webm,video/quicktime";
 
 // Compact button for the toolbar.
 export function UploadButton() {
@@ -60,10 +61,11 @@ export function UploadDropzone() {
       <span className="grid h-16 w-16 place-items-center rounded-full bg-accent/10 text-accent">
         <Icon.Upload width={28} height={28} strokeWidth={2} />
       </span>
-      <h3 className="mt-5 font-display text-2xl text-cream">Drop photos to begin</h3>
+      <h3 className="mt-5 font-display text-2xl text-cream">Drop photos or videos to begin</h3>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
-        Drag JPEG, PNG, WebP or AVIF files here, or click to browse. Each photo is captioned,
-        tagged and scored by AI right here in your browser — nothing is uploaded.
+        Drag images (JPEG, PNG, WebP, AVIF) or videos (MP4, WebM, MOV) here, or click to browse.
+        Each one is captioned, tagged and scored by AI right here in your browser — nothing is
+        uploaded.
       </p>
       <span className="tracked mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-5 py-2.5 text-bg">
         <Icon.Upload width={16} height={16} strokeWidth={2.2} />
