@@ -24,7 +24,7 @@ export default function Navbar() {
               Aperture<span className="text-accent">.</span>
             </span>
             <span className="block text-[10px] uppercase tracking-[0.18em] text-muted">
-              AI Photography Manager
+              AI Photography Manager · by Joshua Power
             </span>
           </span>
         </a>
