@@ -1,0 +1,22 @@
+{
+  "name": "ai-photography-asset-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered Digital Asset Manager for photographers — in-browser tagging, captioning, quality scoring and natural-language search.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.3.3",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
